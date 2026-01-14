@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { WhoisData, WhoisCache } from '../../types/database';
+import type { WhoisData, WhoisCache, WhoisCacheInsert } from '../../types/database';
 
 const WHOIS_API_URL = 'https://api.api-ninjas.com/v1/whois';
 const CACHE_DURATION_DAYS = 7;
@@ -63,15 +63,17 @@ async function cacheWhoisData(domainName: string, whoisData: WhoisData): Promise
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + CACHE_DURATION_DAYS);
 
-  const { error } = await supabase
-    .from('whois_cache')
-    .upsert({
-      domain_name: domainName,
-      whois_data: whoisData,
-      user_id: user.id,
-      cached_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString(),
-    }, {
+  const cacheData: WhoisCacheInsert = {
+    domain_name: domainName,
+    whois_data: whoisData,
+    user_id: user.id,
+    cached_at: new Date().toISOString(),
+    expires_at: expiresAt.toISOString(),
+  };
+
+  const { error } = await (supabase
+    .from('whois_cache') as any)
+    .upsert(cacheData, {
       onConflict: 'domain_name',
     });
 

@@ -98,6 +98,7 @@ export interface WhoisCacheInsert {
   id?: string;
   domain_name: string;
   whois_data: WhoisData;
+  user_id?: string;
   cached_at?: string;
   expires_at?: string;
 }

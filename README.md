@@ -1,6 +1,8 @@
 # NameUtils
 
-A modern domain management platform built with Next.js, Supabase, and TypeScript.
+Your Personal Domain Management Platform built with Next.js, Supabase, and TypeScript.
+
+> DEMO: https://nameutils.com
 
 ## Features
 
@@ -56,7 +58,7 @@ pnpm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deployment on Netlify
+## Deployment on Netlify (Or Vercel)
 
 ### Deploy Steps
 

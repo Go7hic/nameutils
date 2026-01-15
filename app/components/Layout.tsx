@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Globe, Search, Database, Settings, Menu, X, LogOut, User, Languages } from 'lucide-react';
+import { Globe, Search, Database, Settings, Menu, X, LogOut, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../components/providers/AuthProvider';
+import Footer from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,22 +14,16 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const navigation = [
     { name: t('nav.dashboard'), icon: Database, path: '/dashboard' },
     { name: t('nav.domains'), icon: Globe, path: '/domains' },
     { name: t('nav.search'), icon: Search, path: '/search' },
     { name: t('nav.settings'), icon: Settings, path: '/settings' },
-  ];
-
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'zh', name: '中文' },
   ];
 
   const handleSignOut = async () => {
@@ -40,13 +35,8 @@ export default function Layout({ children }: LayoutProps) {
     }
   };
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    setIsLangMenuOpen(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex flex-col">
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -76,31 +66,6 @@ export default function Layout({ children }: LayoutProps) {
                   </button>
                 );
               })}
-
-              <div className="relative ml-3">
-                <button
-                  onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                >
-                  <Languages className="w-4 h-4" />
-                </button>
-
-                {isLangMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-slate-200/60 py-1.5">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`w-full flex items-center px-4 py-2 text-sm hover:bg-slate-50 transition-colors duration-150 ${
-                          i18n.language === lang.code ? 'text-slate-900 font-semibold bg-slate-50' : 'text-slate-600'
-                        }`}
-                      >
-                        {lang.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               <div className="relative ml-3">
                 <button
@@ -170,24 +135,6 @@ export default function Layout({ children }: LayoutProps) {
               })}
               <div className="border-t border-slate-200 pt-2 mt-2">
                 <div className="px-3 py-2">
-                  <p className="text-xs text-slate-500 mb-2">{t('settings.preferences.language')}</p>
-                  <div className="flex space-x-2">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`px-3 py-1 rounded text-sm ${
-                          i18n.language === lang.code
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
-                      >
-                        {lang.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="px-3 py-2">
                   <p className="text-xs text-slate-500">Signed in as</p>
                   <p className="text-sm font-medium text-slate-900 truncate">{user?.email}</p>
                 </div>
@@ -204,9 +151,10 @@ export default function Layout({ children }: LayoutProps) {
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {children}
       </main>
+      <Footer />
     </div>
   );
 }

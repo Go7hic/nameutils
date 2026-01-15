@@ -1,25 +1,15 @@
 'use client';
 
-import { Globe, Search, Shield, BarChart3, Clock, Zap, Languages, Sparkles } from 'lucide-react';
+import { Globe, Search, Shield, BarChart3, Clock, Zap, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
 import Button from './Button';
 import { SEO } from './SEO';
+import Footer from './Footer';
 
 export default function Landing() {
   const router = useRouter();
-  const { t, i18n } = useTranslation();
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'zh', name: '中文' },
-  ];
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    setIsLangMenuOpen(false);
-  };
+  const { t } = useTranslation();
 
   const features = [
     {
@@ -71,29 +61,6 @@ export default function Landing() {
                 <span className="ml-2 text-xl font-bold text-slate-900">NameUtils</span>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <button
-                    onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                  >
-                    <Languages className="w-4 h-4" />
-                  </button>
-                  {isLangMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-slate-200 py-1">
-                      {languages.map((lang) => (
-                        <button
-                          key={lang.code}
-                          onClick={() => changeLanguage(lang.code)}
-                          className={`w-full flex items-center px-4 py-2 text-sm hover:bg-slate-50 ${
-                            i18n.language === lang.code ? 'text-blue-600 font-medium' : 'text-slate-700'
-                          }`}
-                        >
-                          {lang.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
                 <Button variant="ghost" onClick={() => router.push('/login')}>
                   {t('nav.login')}
                 </Button>
@@ -193,19 +160,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <footer className="bg-slate-900 text-slate-300 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex items-center mb-4 md:mb-0">
-                <Globe className="w-6 h-6 text-blue-400" />
-                <span className="ml-2 text-lg font-semibold text-white">NameUtils</span>
-              </div>
-              <div className="text-sm text-slate-400">
-                2026 NameUtils. All rights reserved.
-              </div>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

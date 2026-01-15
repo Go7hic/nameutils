@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Globe, Languages } from 'lucide-react';
+import { Globe, Languages, Github } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 
 export default function Footer() {
   const { i18n } = useTranslation();
@@ -25,8 +26,15 @@ export default function Footer() {
           <div className="flex items-center mb-4 md:mb-0">
             <Globe className="w-5 h-5 text-blue-400" />
             <span className="ml-2 text-base font-semibold text-white">NameUtils</span>
-          </div>
-          <div className="flex items-center space-x-6">
+            <Link
+              href="https://github.com/Go7hic/nameutils"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              aria-label="GitHub Repository"
+            >
+              <Github className="w-5 h-5" />
+            </Link>
             <div className="relative">
               <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
@@ -53,6 +61,10 @@ export default function Footer() {
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex items-center space-x-6">
+           
+           
             <div className="text-sm text-slate-400">
               © 2026 NameUtils. All rights reserved.
             </div>

@@ -23,8 +23,8 @@ Your Personal Domain Management Platform built with Next.js, Supabase, and TypeS
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Go7hic/name-utils.git
-cd name-utils
+git clone https://github.com/Go7hic/nameutils.git
+cd nameutils
 ```
 
 2. Install dependencies:

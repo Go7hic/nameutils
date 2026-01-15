@@ -12,7 +12,7 @@ export default {
   landing: {
     hero: {
       title: 'Your Personal Domain Management Platform',
-      subtitle: 'Simple, powerful, easy-to-use, AI-powered domain management platform',
+      subtitle: 'Simple, powerful, open-source, AI-powered domain management platform',
       cta: 'Get Started Free',
       ctaSecondary: 'Learn More',
     },

@@ -12,7 +12,7 @@ export default {
   landing: {
     hero: {
       title: '您的个人域名管理平台',
-      subtitle: '简洁、强大、易用、AI 赋能的域名管理平台',
+      subtitle: '简洁、强大、开源、AI 赋能的域名管理平台',
       cta: '免费开始',
       ctaSecondary: '了解更多',
     },

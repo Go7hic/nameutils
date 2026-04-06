@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Globe, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Globe, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Button from '../components/Button';
 import { useAuth } from '../components/providers/AuthProvider';
@@ -12,37 +12,15 @@ import { SEO } from '../components/SEO';
 export default function Login() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, signInWithGoogle, user } = useAuth();
+  const { signInWithGoogle, user } = useAuth();
 
   useEffect(() => {
     if (user) {
       router.push('/dashboard');
     }
   }, [user, router]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      await signIn(email, password);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -71,67 +49,20 @@ export default function Login() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('auth.login.email')}
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
-                </div>
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                {error}
               </div>
+            )}
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-                  {t('auth.login.password')}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('auth.login.password')}
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" isLoading={isLoading} className="w-full">
-                {t('auth.login.submit')}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </form>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-500">Or continue with</span>
-              </div>
-            </div>
+            <p className="text-sm text-slate-600 mb-6">
+              Continue with your Google account. If your email matches a migrated
+              account, your existing domains will be available after sign-in.
+            </p>
 
             <Button
               type="button"
-              variant="secondary"
+              variant="primary"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
               className="w-full"

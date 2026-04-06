@@ -1,5 +1,5 @@
 import type { DomainSearchResult } from '../../types/database';
-import { checkDomainAvailabilityWithFallback } from './domainAvailabilityProviders';
+import { requestJson } from './http';
 
 // Use Next.js API routes instead of Edge Function
 const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
@@ -14,25 +14,23 @@ const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : ''
  */
 export async function checkDomainAvailability(
   domain: string,
-  vercelToken?: string,
-  teamId?: string
+  _vercelToken?: string,
+  _teamId?: string
 ): Promise<DomainSearchResult> {
-  return checkDomainAvailabilityWithFallback(domain, {
-    vercelToken,
-    vercelTeamId: teamId,
-    providers: ['vercel', 'apininjas', 'rapidapi'],
-  });
+  return requestJson<DomainSearchResult>(
+    `${API_BASE_URL}/api/domain-search?domain=${encodeURIComponent(domain)}`,
+  );
 }
 
 export async function bulkCheckDomainAvailability(
   baseName: string,
   extensions: string[],
-  vercelToken?: string,
-  teamId?: string
+  _vercelToken?: string,
+  _teamId?: string
 ): Promise<DomainSearchResult[]> {
   const promises = extensions.map(ext => {
     const fullDomain = `${baseName}.${ext}`;
-    return checkDomainAvailability(fullDomain, vercelToken, teamId);
+    return checkDomainAvailability(fullDomain);
   });
 
   return Promise.all(promises);
@@ -59,52 +57,16 @@ export function generateDomainSuggestions(baseName: string): string[] {
 }
 
 export async function getSupportedTLDs(
-  vercelToken?: string,
-  teamId?: string
+  _vercelToken?: string,
+  _teamId?: string
 ): Promise<string[]> {
-  if (!vercelToken) {
-    console.log('No Vercel token provided, using popular extensions');
-    return popularExtensions;
-  }
-
   try {
-    // Use Next.js API route
-    const params = new URLSearchParams({
-      token: vercelToken,
-    });
-    if (teamId) {
-      params.append('teamId', teamId);
-    }
-    const tldsUrl = `${API_BASE_URL}/api/vercel/tlds?${params.toString()}`;
-
-    console.log('🔍 Fetching TLDs from Next.js API:', tldsUrl);
-
-    const response = await fetch(tldsUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('TLDs response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('TLDs API error:', response.statusText, errorText);
-      throw new Error(`API error: ${response.statusText}`);
-    }
-
-    // Vercel API returns a string array directly: ["com", "net", "org", ...]
-    const data = await response.json();
-    console.log('TLDs response data:', data);
+    const data = await requestJson<string[]>(`${API_BASE_URL}/api/domain-search/tlds`);
 
     if (Array.isArray(data)) {
-      // Remove leading dots if any and return
-      const tlds = data.map((tld: string) => tld.replace(/^\./, ''));
-      console.log('Processed TLDs:', tlds);
-      return tlds;
+      return data.map((tld: string) => tld.replace(/^\./, ''));
     }
 
-    console.warn('TLDs response is not an array, using popular extensions');
     return popularExtensions;
   } catch (error) {
     console.error('Error fetching supported TLDs:', error);

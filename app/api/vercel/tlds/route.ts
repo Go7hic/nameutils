@@ -1,47 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const token = searchParams.get('token');
-  const teamId = searchParams.get('teamId');
+import { auth } from '../../../../auth';
+import { getRequiredSessionUser } from '@/lib/server/auth/session';
+import { getSupportedTlds } from '@/lib/server/domain-search/service';
+import { createKvStringCache } from '@/lib/server/runtime/cache';
+import { getAppRuntimeEnv } from '@/lib/server/runtime/env';
 
-  if (!token) {
-    return NextResponse.json(
-      { error: 'Vercel token is required' },
-      { status: 400 }
-    );
-  }
-
+export async function GET() {
   try {
-    // Build Vercel API URL
-    let apiUrl = 'https://api.vercel.com/v1/registrar/tlds/supported';
-    if (teamId) {
-      apiUrl += `?teamId=${encodeURIComponent(teamId)}`;
-    }
+    const [session, env] = await Promise.all([auth(), getAppRuntimeEnv()]);
+    getRequiredSessionUser(session);
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+    const result = await getSupportedTlds({
+      cache: createKvStringCache(env.CACHE),
+      env,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: `Vercel API error: ${response.statusText}`, details: errorText },
-        { status: response.status }
-      );
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      const status = error.message === 'Authentication required' ? 401 : 500;
+      return NextResponse.json({ error: error.message }, { status });
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

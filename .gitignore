@@ -21,7 +21,14 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.dev.vars
 .next
 .next/*
+.open-next
+.wrangler
+coverage
+migration-artifacts
+*.tsbuildinfo
 supabase/
 .pnpm-store/
+scripts

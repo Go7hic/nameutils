@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "nameutils",
+  "compatibility_date": "2026-04-06",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "nameutils"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nameutils",
+      "database_id": "4356c8e7-98c5-46d9-becc-b21552ec7c07"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "b73fb61393a34c5c9fc50c28b0dd7067"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MIGRATION_BUCKET",
+      "bucket_name": "nameutils-migration-assets"
+    }
+  ]
+}

@@ -1,43 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const domain = searchParams.get('domain');
-  const token = searchParams.get('token');
+import { auth } from '../../../../auth';
+import { getRequiredSessionUser } from '@/lib/server/auth/session';
+import { getDomainAvailability } from '@/lib/server/domain-search/service';
+import { createKvStringCache } from '@/lib/server/runtime/cache';
+import { getAppRuntimeEnv } from '@/lib/server/runtime/env';
 
-  if (!domain || !token) {
-    return NextResponse.json(
-      { error: 'Domain and token are required' },
-      { status: 400 }
-    );
-  }
-
+export async function GET(request: Request) {
   try {
-    const apiUrl = `https://api.vercel.com/v1/registrar/domains/${encodeURIComponent(domain)}/price`;
+    const [session, env] = await Promise.all([auth(), getAppRuntimeEnv()]);
+    getRequiredSessionUser(session);
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: `Vercel API error: ${response.statusText}`, details: errorText },
-        { status: response.status }
-      );
+    const url = new URL(request.url);
+    const domain = url.searchParams.get('domain');
+    if (!domain) {
+      return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const result = await getDomainAvailability({
+      domain,
+      cache: createKvStringCache(env.CACHE),
+      env,
+      providers: ['vercel'],
+    });
+
+    return NextResponse.json({
+      price: result.price ?? null,
+      currency: result.currency ?? null,
+      available: result.available,
+    });
   } catch (error) {
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      const status = error.message === 'Authentication required' ? 401 : 500;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -18,9 +18,6 @@ import {
 import { getRegistrationLinks } from '@/lib/utils/registrationPlatforms';
 import type { DomainSearchResult } from '@/types/database';
 
-const VERCEL_TOKEN = process.env.NEXT_PUBLIC_VERCEL_API_TOKEN;
-const VERCEL_TEAM_ID = process.env.NEXT_PUBLIC_VERCEL_TEAM_ID;
-
 export default function DomainSearch() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,11 +36,9 @@ export default function DomainSearch() {
   // Load supported TLDs on component mount
   useEffect(() => {
     const loadSupportedTLDs = async () => {
-      if (!VERCEL_TOKEN) return;
-
       setIsLoadingTLDs(true);
       try {
-        const tlds = await getSupportedTLDs(VERCEL_TOKEN, VERCEL_TEAM_ID);
+        const tlds = await getSupportedTLDs();
         if (tlds.length > 0) {
           setAvailableTLDs(tlds);
         }
@@ -112,11 +107,7 @@ export default function DomainSearch() {
 
       if (parsed.hasTLD && parsed.fullDomain) {
         // 情况1：输入了明确后缀 - 先检查这个域名
-        const mainResult = await checkDomainAvailability(
-          parsed.fullDomain,
-          VERCEL_TOKEN || undefined,
-          VERCEL_TEAM_ID || undefined
-        );
+        const mainResult = await checkDomainAvailability(parsed.fullDomain);
         
         results = [mainResult];
         
@@ -130,11 +121,7 @@ export default function DomainSearch() {
           // 批量查询推荐域名
           const recommendedResults = await Promise.all(
             recommendedDomains.map(domain =>
-              checkDomainAvailability(
-                domain,
-                VERCEL_TOKEN || undefined,
-                VERCEL_TEAM_ID || undefined
-              )
+              checkDomainAvailability(domain)
             )
           );
           
@@ -144,12 +131,7 @@ export default function DomainSearch() {
       } else {
         // 情况2：无后缀 - 查询多个 TLD
         const tldsToCheck = availableTLDs.slice(0, 20); // 检查前 20 个 TLD
-        results = await bulkCheckDomainAvailability(
-          parsed.baseName,
-          tldsToCheck,
-          VERCEL_TOKEN || undefined,
-          VERCEL_TEAM_ID || undefined
-        );
+        results = await bulkCheckDomainAvailability(parsed.baseName, tldsToCheck);
       }
 
       // 筛选 Top Results 和 All Results
@@ -259,7 +241,7 @@ export default function DomainSearch() {
                   Loading supported TLDs...
                 </div>
               )}
-              {!isLoadingTLDs && VERCEL_TOKEN && (
+              {!isLoadingTLDs && availableTLDs.length > 0 && (
                 <div className="text-sm text-slate-600">
                   Checking {availableTLDs.length} supported TLDs
                 </div>

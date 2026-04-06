@@ -1,84 +1,121 @@
 # NameUtils
 
-Your Personal Domain Management Platform built with Next.js, Supabase, and TypeScript.
+NameUtils is a personal domain portfolio manager built with Next.js 16 and deployed on Cloudflare.
 
-> DEMO: https://nameutils.com
+> Demo: https://nameutils.com
 
 ## Features
 
-- Domain search and availability checking
+- Google sign-in
 - Domain portfolio management
-- User authentication
-- Internationalization (English/Chinese)
+- Domain availability lookup
+- JSON, CSV, and image-based import
+- English and Chinese interface
 
 ## Tech Stack
 
-- **Framework**: Next.js 16
-- **Database**: Supabase
-- **Styling**: Tailwind CSS
-- **Authentication**: Supabase Auth
-- **Deployment**: Netlify
+- Framework: Next.js 16
+- Auth: Auth.js / NextAuth + Google
+- Database: Cloudflare D1
+- Cache: Cloudflare KV
+- Object storage: Cloudflare R2
+- Deployment: OpenNext on Cloudflare Workers
+- Styling: Tailwind CSS
 
 ## Local Development
 
-1. Clone the repository:
+1. Install dependencies:
+
 ```bash
-git clone https://github.com/Go7hic/nameutils.git
-cd nameutils
+pnpm install
 ```
 
-2. Install dependencies:
+2. Create local env files:
+
 ```bash
-npm install
+cp .dev.vars.example .dev.vars
 ```
 
-3. Set up environment variables:
+3. Fill in the required values:
+
+- `AUTH_SECRET`
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
+- `VERCEL_API_TOKEN`
+- `VERCEL_TEAM_ID`
+- `API_NINJAS_KEY`
+- `RAPIDAPI_KEY`
+- `RAPIDAPI_HOST`
+
+4. Start the app:
+
 ```bash
-cp .env.example .env
+pnpm dev
 ```
 
-Edit `.env` and add your configuration:
-- `GOOGLE_CLIENT_ID`: Your google client id 
-- `GOOGLE_AUTH_KEY`: Your google auth key
+5. Regenerate types after changing routes or Cloudflare bindings:
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-
-- `NEXT_PUBLIC_VERCEL_API_TOKEN`: Vercel API token for domain availability checks
-- `NEXT_PUBLIC_VERCEL_TEAM_ID`: Vercel team ID
-
-- `API_NINJAS_KEY`: API Ninjas API key for domain availability fallback
-- `RAPIDAPI_KEY`: RapidAPI key for domain 
-- `RAPIDAPI_HOST`:  RapidAPI host (default: `domains-api.p.rapidapi.com`)
-
-4. Run the development server:
 ```bash
-pnpm run dev
+pnpm exec next typegen
+pnpm cf:typegen
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+## Cloudflare Setup
 
-## Deployment on Netlify (Or Vercel)
+1. Create the required resources:
 
-### Deploy Steps
+```bash
+pnpm wrangler d1 create nameutils
+pnpm wrangler kv namespace create nameutils
+pnpm wrangler r2 bucket create nameutils-migration-assets
+```
 
-1. Push your code to GitHub
-2. Connect your repository to Netlify
-3. Configure the environment variables in Netlify dashboard
-4. Deploy!
+2. Update `wrangler.jsonc` with the generated D1 and KV IDs.
 
-The build settings are already configured in `netlify.toml`.
+3. Apply the database schema:
 
-## Database Setup
+```bash
+pnpm wrangler d1 migrations apply nameutils --remote
+```
 
-The project uses Supabase for data persistence. To set up the database:
+4. Add the required Cloudflare secrets:
 
-1. Open your Supabase project dashboard
-2. Go to SQL Editor
-3. Copy and paste the contents of `schema.sql`
-4. Run the SQL script
+```bash
+pnpm wrangler secret put AUTH_SECRET
+pnpm wrangler secret put AUTH_GOOGLE_ID
+pnpm wrangler secret put AUTH_GOOGLE_SECRET
+pnpm wrangler secret put VERCEL_API_TOKEN
+pnpm wrangler secret put VERCEL_TEAM_ID
+pnpm wrangler secret put API_NINJAS_KEY
+pnpm wrangler secret put RAPIDAPI_KEY
+pnpm wrangler secret put RAPIDAPI_HOST
+```
 
-This will create all tables, indexes, constraints, and RLS policies needed for the application.
+5. Build and preview:
+
+```bash
+pnpm build:cloudflare
+pnpm preview:cloudflare
+```
+
+6. Deploy:
+
+```bash
+pnpm deploy:cloudflare
+```
+
+## Verification
+
+- `pnpm test`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm build:cloudflare`
+
+## Migration Guide
+
+This project was migrated from Supabase to Cloudflare. The migration notes, data import flow, and cutover checklist live here:
+
+- [Supabase to Cloudflare Migration Guide](./docs/migration/README.md)
 
 ## License
 

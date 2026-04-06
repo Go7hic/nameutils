@@ -1,71 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-/**
- * GET /api/vercel/availability
- * 
- * Get availability for a specific domain
- * 
- * Query parameters:
- * - domain: string (required) - The domain name to check
- * - token: string (required) - Vercel API token
- * - teamId: string (optional) - Vercel team ID
- * 
- * Returns: { available: boolean }
- */
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const domain = searchParams.get('domain');
-  const token = searchParams.get('token');
-  const teamId = searchParams.get('teamId');
+import { auth } from '../../../../auth';
+import { getRequiredSessionUser } from '@/lib/server/auth/session';
+import { getDomainAvailability } from '@/lib/server/domain-search/service';
+import { createKvStringCache } from '@/lib/server/runtime/cache';
+import { getAppRuntimeEnv } from '@/lib/server/runtime/env';
 
-  if (!domain || !token) {
-    return NextResponse.json(
-      { error: 'Domain and token are required' },
-      { status: 400 }
-    );
-  }
-
+export async function GET(request: Request) {
   try {
-    // Build Vercel API URL with optional teamId query parameter
-    let apiUrl = `https://api.vercel.com/v1/registrar/domains/${encodeURIComponent(domain)}/availability`;
-    if (teamId) {
-      apiUrl += `?teamId=${encodeURIComponent(teamId)}`;
+    const [session, env] = await Promise.all([auth(), getAppRuntimeEnv()]);
+    getRequiredSessionUser(session);
+
+    const url = new URL(request.url);
+    const domain = url.searchParams.get('domain');
+    if (!domain) {
+      return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
     }
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+    const result = await getDomainAvailability({
+      domain,
+      cache: createKvStringCache(env.CACHE),
+      env,
+      providers: ['vercel'],
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        errorData = errorText;
-      }
-      
-      return NextResponse.json(
-        { 
-          error: `Vercel API error: ${response.statusText}`,
-          details: errorData 
-        },
-        { status: response.status }
-      );
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      const status = error.message === 'Authentication required' ? 401 : 500;
+      return NextResponse.json({ error: error.message }, { status });
     }
 
-    // Vercel API returns: { available: boolean }
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
